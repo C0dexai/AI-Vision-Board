@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Vision Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color: transparent; /* Changed to transparent to see the fixed background */
+      }
+      h1, h2, h3, .font-display {
+        font-family: 'Playfair Display', serif;
+      }
+      .font-mono {
+        font-family: 'Share Tech Mono', monospace;
+      }
+      
+      #app-background {
+        position: fixed;
+        inset: 0;
+        z-index: -10;
+        background-image: linear-gradient(to bottom, rgba(2, 6, 23, 0.5), rgba(2, 6, 23, 0.95)), url('https://images.pexels.com/photos/2138922/pexels-photo-2138922.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+        background-size: cover;
+        background-position: center center;
+      }
+
+      /* Neon Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #020617;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 8px #d946ef;
+      }
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #fff #020617;
+      }
+
+      /* Glowing Orb Animation */
+      @keyframes pulse-glow {
+        0%, 100% {
+          box-shadow: 0 0 10px 2px rgba(168, 85, 247, 0.7), 0 0 20px 5px rgba(168, 85, 247, 0.5), inset 0 0 5px rgba(236, 72, 153, 0.6);
+        }
+        50% {
+          box-shadow: 0 0 20px 5px rgba(217, 70, 239, 0.7), 0 0 35px 10px rgba(217, 70, 239, 0.5), inset 0 0 8px rgba(192, 38, 211, 0.6);
+        }
+      }
+      .orb-pulse {
+        animation: pulse-glow 4s infinite ease-in-out;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.8.0",
+    "idb": "https://esm.sh/idb@8"
+  }
+}
+</script>
+</head>
+  <body class="text-white">
+    <div id="app-background"></div>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
