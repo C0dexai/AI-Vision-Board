@@ -32,6 +32,7 @@ export interface VisionItem {
   acceptanceCriteria: string[];
   priority: Priority;
   sourceImageId?: string;
+  sourceItemId?: string;
 }
 
 // Added for AIFamily chat functionality

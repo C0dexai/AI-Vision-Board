@@ -152,6 +152,7 @@ const App = () => {
                     },
                     acceptanceCriteria: [],
                     priority: item.priority,
+                    sourceItemId: item.id,
                 };
                 setItems(prev => [newImageItem, ...prev]);
                 await dbService.saveVisionItem(newImageItem);
@@ -160,6 +161,69 @@ const App = () => {
             }
         } catch (e) {
             setError("An error occurred during visualization.");
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [items]);
+    
+    const handleVisualizeAllIdeas = useCallback(async () => {
+        const visualizedItemIds = new Set(
+            items
+                .filter(item => item.type === ItemType.VISION_IMAGE && item.sourceItemId)
+                .map(item => item.sourceItemId)
+        );
+    
+        const ideasToVisualize = items.filter(
+            item => item.type === ItemType.IDEA && !visualizedItemIds.has(item.id) && typeof item.content === 'string'
+        );
+    
+        if (ideasToVisualize.length === 0) {
+            setError("All ideas have already been visualized, or there are no ideas to visualize.");
+            setTimeout(() => setError(null), 5000);
+            return;
+        }
+    
+        setIsLoading(true);
+        setError(null);
+        try {
+            const visualizationPromises = ideasToVisualize.map(async (item) => {
+                try {
+                    const result = await geminiService.generateImageAndSummary(item.content as string);
+                    if (result) {
+                        const newImageItem: VisionItem = {
+                            id: crypto.randomUUID(),
+                            type: ItemType.VISION_IMAGE,
+                            content: {
+                                prompt: item.content as string,
+                                imageUrl: result.imageUrl,
+                                summary: result.summary,
+                            },
+                            acceptanceCriteria: [],
+                            priority: item.priority,
+                            sourceItemId: item.id,
+                        };
+                        return newImageItem;
+                    }
+                } catch (error) {
+                    console.error(`Failed to visualize idea ${item.id}:`, error);
+                }
+                return null;
+            });
+            
+            const newImageItems = (await Promise.all(visualizationPromises)).filter((item): item is VisionItem => item !== null);
+    
+            if (newImageItems.length > 0) {
+                setItems(prev => [...newImageItems, ...prev]);
+                await Promise.all(newImageItems.map(item => dbService.saveVisionItem(item)));
+            }
+            
+            if (newImageItems.length < ideasToVisualize.length) {
+                setError(`Successfully visualized ${newImageItems.length} of ${ideasToVisualize.length} ideas. Some failed.`);
+            }
+    
+        } catch (e) {
+            setError("An error occurred during batch visualization.");
             console.error(e);
         } finally {
             setIsLoading(false);
@@ -276,6 +340,16 @@ const App = () => {
             setIsLoading(false);
         }
     };
+
+    const visualizedItemIds = new Set(
+        items
+            .filter(item => item.type === ItemType.VISION_IMAGE && item.sourceItemId)
+            .map(item => item.sourceItemId)
+    );
+
+    const unvisualizedIdeasCount = items.filter(
+        item => item.type === ItemType.IDEA && !visualizedItemIds.has(item.id)
+    ).length;
     
     if (isInitializing) {
         return (
@@ -300,14 +374,17 @@ const App = () => {
 
                     {error && (
                         <div className="bg-red-900/50 border border-red-500/70 text-red-300 p-4 m-4 rounded-lg shadow-lg shadow-red-500/20 fixed top-16 left-4 right-4 z-50">
-                            <strong>Error:</strong> {error}
+                            <strong>Notice:</strong> {error}
                             <button onClick={() => setError(null)} className="float-right font-bold">X</button>
                         </div>
                     )}
                     
                     {currentView === 'board' && (
                         <main className="pt-20">
-                            <Toolbar onAddItem={handleAddItem} onOpenAiModal={handleOpenAiModal} />
+                            <Toolbar 
+                                onAddItem={handleAddItem} 
+                                onOpenAiModal={handleOpenAiModal}
+                            />
                             <Board 
                                 items={items} 
                                 onUpdateItem={handleUpdateItem} 
@@ -319,6 +396,8 @@ const App = () => {
                                 onGenerateHaiku={handleGenerateHaiku}
                                 onGenerateStoryFromInference={handleGenerateStoryFromInference}
                                 isLoading={isLoading}
+                                onVisualizeAllIdeas={handleVisualizeAllIdeas}
+                                unvisualizedIdeasCount={unvisualizedIdeasCount}
                             />
                         </main>
                     )}
@@ -361,7 +440,7 @@ const App = () => {
 const Toolbar: React.FC<{ onAddItem: (type: 'VISION_STATEMENT' | 'IDEA') => void; onOpenAiModal: (mode: 'ideas' | 'summary') => void; }> = ({ onAddItem, onOpenAiModal }) => {
   const buttonBaseStyle = "flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 transform hover:scale-105";
   return (
-    <div className="p-4 flex justify-center items-center gap-4 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-800">
+    <div className="p-4 flex justify-center items-center flex-wrap gap-4 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-800">
       <button onClick={() => onAddItem('VISION_STATEMENT')} className={`${buttonBaseStyle} bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50`}> <span className="w-5 h-5">+</span> Add Vision </button>
       <button onClick={() => onAddItem('IDEA')} className={`${buttonBaseStyle} bg-pink-600 hover:bg-pink-500 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50`}> <span className="w-5 h-5">+</span> Add Idea </button>
       <button onClick={() => onOpenAiModal('ideas')} className={`${buttonBaseStyle} bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50`}> ✨ Generate Ideas </button>

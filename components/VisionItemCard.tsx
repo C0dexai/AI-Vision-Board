@@ -159,8 +159,8 @@ const VisionItemCard: React.FC<VisionItemCardProps> = ({ item, onUpdate, onDelet
                     {(item.type === ItemType.VISION_STATEMENT || item.type === ItemType.IDEA) && (
                         <button onClick={() => onOpenStyleModal(item)} disabled={isLoading} className="p-2 text-slate-400 hover:text-blue-400 transition-colors disabled:opacity-50" title="Suggest Styles"><WandIcon className="w-5 h-5"/></button>
                     )}
-                    {item.type === ItemType.VISION_STATEMENT && (
-                         <button onClick={() => onVisualize(item.id)} disabled={isLoading} className="p-2 text-slate-400 hover:text-teal-400 transition-colors disabled:opacity-50" title="Visualize Vision"><ImageIcon className="w-5 h-5"/></button>
+                    {(item.type === ItemType.VISION_STATEMENT || item.type === ItemType.IDEA) && (
+                         <button onClick={() => onVisualize(item.id)} disabled={isLoading} className="p-2 text-slate-400 hover:text-teal-400 transition-colors disabled:opacity-50" title="Visualize"><ImageIcon className="w-5 h-5"/></button>
                     )}
                     {item.type === ItemType.IDEA && (
                          <button onClick={() => onConvertToStory(item.id)} disabled={isLoading} className="p-2 text-slate-400 hover:text-blue-400 transition-colors disabled:opacity-50" title="Convert to User Story"><ConvertIcon className="w-5 h-5"/></button>
